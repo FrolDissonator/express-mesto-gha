@@ -32,7 +32,7 @@ module.exports.deleteCard = async (req, res) => {
     }
     return res.status(200).send(card);
   } catch (err) {
-    return res.status(ERR_DEFAULT).send({ message: 'Internal Server Error' });
+    return res.status(ERR_BAD_REQUEST).send({ message: 'Request Error' });
   }
 };
 
@@ -48,7 +48,7 @@ module.exports.likeCard = async (req, res) => {
     }
     return res.status(200).send(card);
   } catch (err) {
-    return res.status(ERR_DEFAULT).send({ message: 'Internal Server Error' });
+    return res.status(ERR_BAD_REQUEST).send({ message: 'Request Error' });
   }
 };
 
@@ -64,6 +64,6 @@ module.exports.dislikeCard = async (req, res) => {
     }
     return res.status(200).send(card);
   } catch (err) {
-    return res.status(ERR_DEFAULT).send({ message: 'Internal Server Error' });
+    return res.status(ERR_BAD_REQUEST).send({ message: 'Request Error' });
   }
 };

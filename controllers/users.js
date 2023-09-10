@@ -18,7 +18,7 @@ module.exports.getUserById = async (req, res) => {
     }
     return res.status(200).send(user);
   } catch (err) {
-    return res.status(ERR_DEFAULT).send({ message: 'Internal Server Error' });
+    return res.status(ERR_BAD_REQUEST).send({ message: 'Request Error' });
   }
 };
 
