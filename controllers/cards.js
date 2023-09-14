@@ -18,9 +18,12 @@ module.exports.createCard = async (req, res) => {
       link,
       owner: req.user._id,
     });
-    res.status(201).send(card);
+    return res.status(201).send(card);
   } catch (err) {
-    res.status(ERR_BAD_REQUEST).send({ message: 'Request Error' });
+    if (err.name === 'ValidationError') {
+      return res.status(ERR_BAD_REQUEST).send({ message: 'Validation Error' });
+    }
+    return res.status(ERR_DEFAULT).send({ message: 'Internal Server Error' });
   }
 };
 
@@ -32,7 +35,10 @@ module.exports.deleteCard = async (req, res) => {
     }
     return res.status(200).send(card);
   } catch (err) {
-    return res.status(ERR_BAD_REQUEST).send({ message: 'Request Error' });
+    if (err.name === 'CastError') {
+      return res.status(ERR_BAD_REQUEST).send({ message: 'Request Error' });
+    }
+    return res.status(ERR_DEFAULT).send({ message: 'Internal Server Error' });
   }
 };
 
@@ -48,7 +54,10 @@ module.exports.likeCard = async (req, res) => {
     }
     return res.status(200).send(card);
   } catch (err) {
-    return res.status(ERR_BAD_REQUEST).send({ message: 'Request Error' });
+    if (err.name === 'CastError') {
+      return res.status(ERR_BAD_REQUEST).send({ message: 'Request Error' });
+    }
+    return res.status(ERR_DEFAULT).send({ message: 'Internal Server Error' });
   }
 };
 
@@ -64,6 +73,9 @@ module.exports.dislikeCard = async (req, res) => {
     }
     return res.status(200).send(card);
   } catch (err) {
-    return res.status(ERR_BAD_REQUEST).send({ message: 'Request Error' });
+    if (err.name === 'CastError') {
+      return res.status(ERR_BAD_REQUEST).send({ message: 'Request Error' });
+    }
+    return res.status(ERR_DEFAULT).send({ message: 'Internal Server Error' });
   }
 };

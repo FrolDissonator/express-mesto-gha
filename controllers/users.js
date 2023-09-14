@@ -18,7 +18,10 @@ module.exports.getUserById = async (req, res) => {
     }
     return res.status(200).send(user);
   } catch (err) {
-    return res.status(ERR_BAD_REQUEST).send({ message: 'Request Error' });
+    if (err.name === 'CastError') {
+      return res.status(ERR_BAD_REQUEST).send({ message: 'Request Error' });
+    }
+    return res.status(ERR_DEFAULT).send({ message: 'Internal Server Error' });
   }
 };
 
@@ -26,9 +29,12 @@ module.exports.createUser = async (req, res) => {
   const { name, about, avatar } = req.body;
   try {
     const user = await User.create({ name, about, avatar });
-    res.status(201).send(user);
+    return res.status(201).send(user);
   } catch (err) {
-    res.status(ERR_BAD_REQUEST).send({ message: 'Request Error' });
+    if (err.name === 'ValidationError') {
+      return res.status(ERR_BAD_REQUEST).send({ message: 'Validation Error' });
+    }
+    return res.status(ERR_DEFAULT).send({ message: 'Internal Server Error' });
   }
 };
 
@@ -45,7 +51,10 @@ module.exports.updateProfile = async (req, res) => {
     }
     return res.status(200).send(updatedUser);
   } catch (err) {
-    return res.status(ERR_BAD_REQUEST).send({ message: 'Request Error' });
+    if (err.name === 'ValidationError') {
+      return res.status(ERR_BAD_REQUEST).send({ message: 'Validation Error' });
+    }
+    return res.status(ERR_DEFAULT).send({ message: 'Internal Server Error' });
   }
 };
 
@@ -62,6 +71,9 @@ module.exports.updateAvatar = async (req, res) => {
     }
     return res.status(200).send(updatedUser);
   } catch (err) {
-    return res.status(ERR_BAD_REQUEST).send({ message: 'Request Error' });
+    if (err.name === 'ValidationError') {
+      return res.status(ERR_BAD_REQUEST).send({ message: 'Validation Error' });
+    }
+    return res.status(ERR_DEFAULT).send({ message: 'Internal Server Error' });
   }
 };
