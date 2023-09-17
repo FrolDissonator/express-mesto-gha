@@ -1,12 +1,10 @@
 const jwt = require('jsonwebtoken');
 const ApiError = require('../errors/ApiError');
 
-const {
-  NODE_ENV = 'development',
-  JWT_SECRET = 'supersecretkey',
-} = process.env;
+const { NODE_ENV, JWT_SECRET } = process.env;
+const secret = NODE_ENV === 'production' ? JWT_SECRET : 'supersecretkey';
 
-module.exports = (req, res, next) => {
+module.exports.auth = (req, res, next) => {
   const { authorization } = req.headers;
 
   if (!authorization || !authorization.startsWith('Bearer ')) {
@@ -14,10 +12,11 @@ module.exports = (req, res, next) => {
   }
 
   const token = authorization.replace('Bearer ', '');
+
   let payload;
 
   try {
-    payload = jwt.verify(token, NODE_ENV === 'production' ? JWT_SECRET : 'supersecretkey');
+    payload = jwt.verify(token, secret);
   } catch (err) {
     return next(ApiError.unauthorized('Некорректный токен'));
   }
