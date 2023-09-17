@@ -1,16 +1,16 @@
 const Card = require('../models/card');
-const { ERR_BAD_REQUEST, ERR_NOT_FOUND, ERR_DEFAULT } = require('../utils/constants');
+const ApiError = require('../errors/ApiError');
 
-module.exports.getCards = async (req, res) => {
+module.exports.getCards = async (req, res, next) => {
   try {
     const cards = await Card.find();
     res.status(200).send(cards);
   } catch (err) {
-    res.status(ERR_DEFAULT).send({ message: 'Internal Server Error' });
+    next(ApiError.internal('Ошибка сервера'));
   }
 };
 
-module.exports.createCard = async (req, res) => {
+module.exports.createCard = async (req, res, next) => {
   const { name, link } = req.body;
   try {
     const card = await Card.create({
@@ -18,64 +18,76 @@ module.exports.createCard = async (req, res) => {
       link,
       owner: req.user._id,
     });
-    return res.status(201).send(card);
+    res.status(201).send(card);
   } catch (err) {
     if (err.name === 'ValidationError') {
-      return res.status(ERR_BAD_REQUEST).send({ message: 'Validation Error' });
+      next(ApiError.badRequest('Ошибка валидации'));
+    } else {
+      next(ApiError.internal('Ошибка сервера'));
     }
-    return res.status(ERR_DEFAULT).send({ message: 'Internal Server Error' });
   }
 };
 
-module.exports.deleteCard = async (req, res) => {
+module.exports.deleteCard = async (req, res, next) => {
   try {
-    const card = await Card.findByIdAndRemove(req.params.cardId);
+    const card = await Card.findById(req.params.cardId);
     if (!card) {
-      return res.status(ERR_NOT_FOUND).send({ message: 'Card not found' });
+      next(ApiError.notFound('Карточка не найдена'));
+    } else if (card.owner.toString() !== req.user._id) {
+      next(ApiError.badRequest('Вы не можете удалить эту карточку'));
+    } else {
+      await card.remove();
+      res.status(200).send(card);
     }
-    return res.status(200).send(card);
   } catch (err) {
     if (err.name === 'CastError') {
-      return res.status(ERR_BAD_REQUEST).send({ message: 'Request Error' });
+      next(ApiError.badRequest('Неверный запрос'));
+    } else {
+      next(ApiError.internal('Ошибка сервера'));
     }
-    return res.status(ERR_DEFAULT).send({ message: 'Internal Server Error' });
   }
 };
 
-module.exports.likeCard = async (req, res) => {
+module.exports.likeCard = async (req, res, next) => {
   try {
     const card = await Card.findByIdAndUpdate(
       req.params.cardId,
       { $addToSet: { likes: req.user._id } },
       { new: true },
     );
+
     if (!card) {
-      return res.status(ERR_NOT_FOUND).send({ message: 'Card not found' });
+      next(ApiError.notFound('Карточка не найдена'));
+    } else {
+      res.status(200).send(card);
     }
-    return res.status(200).send(card);
   } catch (err) {
     if (err.name === 'CastError') {
-      return res.status(ERR_BAD_REQUEST).send({ message: 'Request Error' });
+      next(ApiError.badRequest('Неверный запрос'));
+    } else {
+      next(ApiError.internal('Ошибка сервера'));
     }
-    return res.status(ERR_DEFAULT).send({ message: 'Internal Server Error' });
   }
 };
 
-module.exports.dislikeCard = async (req, res) => {
+module.exports.dislikeCard = async (req, res, next) => {
   try {
     const card = await Card.findByIdAndUpdate(
       req.params.cardId,
       { $pull: { likes: req.user._id } },
       { new: true },
     );
+
     if (!card) {
-      return res.status(ERR_NOT_FOUND).send({ message: 'Card not found' });
+      next(ApiError.notFound('Карточка не найдена'));
+    } else {
+      res.status(200).send(card);
     }
-    return res.status(200).send(card);
   } catch (err) {
     if (err.name === 'CastError') {
-      return res.status(ERR_BAD_REQUEST).send({ message: 'Request Error' });
+      next(ApiError.badRequest('Неверный запрос'));
+    } else {
+      next(ApiError.internal('Ошибка сервера'));
     }
-    return res.status(ERR_DEFAULT).send({ message: 'Internal Server Error' });
   }
 };

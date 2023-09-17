@@ -1,44 +1,109 @@
+const jwt = require('jsonwebtoken');
+const bcrypt = require('bcrypt');
 const User = require('../models/user');
-const { ERR_BAD_REQUEST, ERR_NOT_FOUND, ERR_DEFAULT } = require('../utils/constants');
+const ApiError = require('../errors/ApiError');
 
-module.exports.getUsers = async (req, res) => {
+module.exports.login = async (req, res, next) => {
+  const { email, password } = req.body;
+
+  try {
+    const user = await User.findOne({ email }).select('+password');
+
+    if (!user) {
+      return next(ApiError.unauthorized('Неверные email или пароль'));
+    }
+
+    const isMatch = await bcrypt.compare(password, user.password);
+
+    if (!isMatch) {
+      return next(ApiError.unauthorized('Неверные email или пароль'));
+    }
+
+    const token = jwt.sign(
+      { _id: user._id },
+      'supersecretkey',
+      { expiresIn: '7d' },
+    );
+
+    return res.cookie('jwt', token, {
+      httpOnly: true,
+      sameSite: true,
+      maxAge: 3600000 * 24 * 7,
+    }).status(200).send({ message: 'Успешный вход' });
+  } catch (err) {
+    return next(ApiError.internal('Ошибка сервера'));
+  }
+};
+
+module.exports.getUsers = async (req, res, next) => {
   try {
     const users = await User.find();
     res.status(200).send(users);
   } catch (err) {
-    res.status(ERR_DEFAULT).send({ message: 'Internal Server Error' });
+    next(ApiError.internal('Ошибка сервера'));
   }
 };
 
-module.exports.getUserById = async (req, res) => {
+module.exports.getUserById = async (req, res, next) => {
   try {
     const user = await User.findById(req.params.userId);
     if (!user) {
-      return res.status(ERR_NOT_FOUND).send({ message: 'User not found' });
+      return next(ApiError.notFound('Пользователь не найден'));
     }
     return res.status(200).send(user);
   } catch (err) {
     if (err.name === 'CastError') {
-      return res.status(ERR_BAD_REQUEST).send({ message: 'Request Error' });
+      return next(ApiError.badRequest('Неверный запрос'));
     }
-    return res.status(ERR_DEFAULT).send({ message: 'Internal Server Error' });
+    return next(ApiError.internal('Ошибка сервера'));
   }
 };
 
-module.exports.createUser = async (req, res) => {
-  const { name, about, avatar } = req.body;
+module.exports.createUser = async (req, res, next) => {
+  const {
+    name,
+    about,
+    avatar,
+    email,
+    password,
+  } = req.body;
   try {
-    const user = await User.create({ name, about, avatar });
-    return res.status(201).send(user);
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const user = await User.create({
+      name,
+      about,
+      avatar,
+      email,
+      password: hashedPassword,
+    });
+    const userResponse = user.toObject();
+    delete userResponse.password;
+
+    return res.status(201).send(userResponse);
   } catch (err) {
     if (err.name === 'ValidationError') {
-      return res.status(ERR_BAD_REQUEST).send({ message: 'Validation Error' });
+      return next(ApiError.badRequest('Ошибка валидации'));
     }
-    return res.status(ERR_DEFAULT).send({ message: 'Internal Server Error' });
+    if (err.code === 11000) {
+      return next(ApiError.alreadyExists('Пользователь с таким email уже существует'));
+    }
+    return next(ApiError.internal('Ошибка сервера'));
   }
 };
 
-module.exports.updateProfile = async (req, res) => {
+module.exports.getCurrentUser = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return next(ApiError.notFound('Пользователь не найден'));
+    }
+    return res.status(200).send(user);
+  } catch (err) {
+    return next(ApiError.internal('Ошибка сервера'));
+  }
+};
+
+module.exports.updateProfile = async (req, res, next) => {
   const { name, about } = req.body;
   try {
     const updatedUser = await User.findByIdAndUpdate(
@@ -47,18 +112,18 @@ module.exports.updateProfile = async (req, res) => {
       { new: true, runValidators: true },
     );
     if (!updatedUser) {
-      return res.status(ERR_NOT_FOUND).send({ message: 'User not found' });
+      return next(ApiError.notFound('Пользователь не найден'));
     }
     return res.status(200).send(updatedUser);
   } catch (err) {
     if (err.name === 'ValidationError') {
-      return res.status(ERR_BAD_REQUEST).send({ message: 'Validation Error' });
+      return next(ApiError.badRequest('Ошибка валидации'));
     }
-    return res.status(ERR_DEFAULT).send({ message: 'Internal Server Error' });
+    return next(ApiError.internal('Ошибка сервера'));
   }
 };
 
-module.exports.updateAvatar = async (req, res) => {
+module.exports.updateAvatar = async (req, res, next) => {
   const { avatar } = req.body;
   try {
     const updatedUser = await User.findByIdAndUpdate(
@@ -67,13 +132,13 @@ module.exports.updateAvatar = async (req, res) => {
       { new: true, runValidators: true },
     );
     if (!updatedUser) {
-      return res.status(ERR_NOT_FOUND).send({ message: 'User not found' });
+      return next(ApiError.notFound('Пользователь не найден'));
     }
     return res.status(200).send(updatedUser);
   } catch (err) {
     if (err.name === 'ValidationError') {
-      return res.status(ERR_BAD_REQUEST).send({ message: 'Validation Error' });
+      return next(ApiError.badRequest('Ошибка валидации'));
     }
-    return res.status(ERR_DEFAULT).send({ message: 'Internal Server Error' });
+    return next(ApiError.internal('Ошибка сервера'));
   }
 };
