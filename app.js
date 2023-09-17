@@ -4,7 +4,7 @@ const bodyParser = require('body-parser');
 const helmet = require('helmet');
 const { celebrate, Joi, errors } = require('celebrate');
 const { login, createUser } = require('./controllers/users');
-const { auth } = require('./middlewares/auth');
+const auth = require('./middlewares/auth');
 const ApiError = require('./errors/ApiError');
 
 mongoose.connect('mongodb://127.0.0.1:27017/mestodb', {
