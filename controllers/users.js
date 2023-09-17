@@ -7,17 +7,7 @@ module.exports.login = async (req, res, next) => {
   const { email, password } = req.body;
 
   try {
-    const user = await User.findOne({ email }).select('+password');
-
-    if (!user) {
-      return next(ApiError.unauthorized('Неверные email или пароль'));
-    }
-
-    const isMatch = await bcrypt.compare(password, user.password);
-
-    if (!isMatch) {
-      return next(ApiError.unauthorized('Неверные email или пароль'));
-    }
+    const user = await User.findUserByCredentials(email, password);
 
     const token = jwt.sign(
       { _id: user._id },
