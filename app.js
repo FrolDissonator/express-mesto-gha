@@ -44,11 +44,6 @@ app.use('*', (req, res) => {
   res.status(404).send({ message: 'Страница не существует.' });
 });
 
-app.listen(port, () => {
-  // eslint-disable-next-line no-console
-  console.log(`Example app listening on port ${port}`);
-});
-
 app.use(errors());
 
 // eslint-disable-next-line no-unused-vars
@@ -57,4 +52,9 @@ app.use((err, req, res, next) => {
     return res.status(err.status).send({ message: err.message });
   }
   return res.status(ApiError.internal).send({ message: 'Ошибка сервера' });
+});
+
+app.listen(port, () => {
+  // eslint-disable-next-line no-console
+  console.log(`Example app listening on port ${port}`);
 });
