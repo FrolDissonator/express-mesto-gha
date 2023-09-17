@@ -20,7 +20,7 @@ module.exports.login = async (req, res, next) => {
     }
 
     const token = jwt.sign(
-      { _id: 'd285e3dceed844f902650f40' },
+      { _id: user._id },
       'supersecretkey',
       { expiresIn: '7d' },
     );
