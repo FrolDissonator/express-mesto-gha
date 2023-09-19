@@ -2,6 +2,7 @@ const {
   ERR_BAD_REQUEST,
   ERR_NOT_FOUND,
   ERR_UNAUTHORIZED,
+  ERR_FORBIDDEN,
   ERR_ALREADY_EXISTS,
   ERR_DEFAULT,
 } = require('../utils/constants');
@@ -27,6 +28,10 @@ class ApiError extends Error {
 
   static unauthorized(msg) {
     return new ApiError(ERR_UNAUTHORIZED, msg);
+  }
+
+  static forbidden(msg) {
+    return new ApiError(ERR_FORBIDDEN, msg);
   }
 
   static alreadyExists(msg) {

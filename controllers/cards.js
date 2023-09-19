@@ -34,7 +34,7 @@ module.exports.deleteCard = async (req, res, next) => {
     if (!card) {
       next(ApiError.notFound('Карточка не найдена'));
     } else if (card.owner.toString() !== req.user._id) {
-      next(ApiError.badRequest('Вы не можете удалить эту карточку'));
+      next(ApiError.forbidden('Вы не можете удалить эту карточку'));
     } else {
       await card.remove();
       res.status(200).send(card);

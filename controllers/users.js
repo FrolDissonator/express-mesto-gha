@@ -21,7 +21,7 @@ module.exports.login = async (req, res, next) => {
 
     return res.status(200).send({ token });
   } catch (err) {
-    return next(ApiError.internal('Ошибка сервера'));
+    return next(ApiError.unauthorized('Ошибка авторизации'));
   }
 };
 

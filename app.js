@@ -2,6 +2,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
 const { celebrate, Joi, errors } = require('celebrate');
 const { login, createUser } = require('./controllers/users');
 const auth = require('./middlewares/auth');
@@ -12,6 +13,11 @@ mongoose.connect('mongodb://127.0.0.1:27017/mestodb', {
 });
 
 const app = express();
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+});
+app.use(limiter);
 const port = 3000;
 
 app.use(helmet());
