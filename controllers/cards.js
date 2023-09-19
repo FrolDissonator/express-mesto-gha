@@ -29,24 +29,38 @@ module.exports.createCard = async (req, res, next) => {
 };
 
 // eslint-disable-next-line consistent-return
+// module.exports.deleteCard = async (req, res, next) => {
+//   try {
+//     const card = await Card.findById(req.params.cardId);
+//     if (!card) {
+//       return next(ApiError.notFound('Карточка не найдена'));
+//     }
+//     if (card.owner.toString() !== req.user._id) {
+//       return next(ApiError.forbidden('Вы не можете удалить эту карточку'));
+//     }
+
+//     await card.remove();
+//     res.status(200).send(card);
+//   } catch (err) {
+//     if (err.name === 'CastError') {
+//       next(ApiError.badRequest('Неверный запрос'));
+//     } else {
+//       next(ApiError.internal('Ошибка сервера'));
+//     }
+//   }
+// };
+
+// eslint-disable-next-line consistent-return
 module.exports.deleteCard = async (req, res, next) => {
   try {
-    const card = await Card.findById(req.params.cardId);
+    const card = await Card.findByIdAndRemove(req.params.cardId);
     if (!card) {
       return next(ApiError.notFound('Карточка не найдена'));
     }
-    if (card.owner.toString() !== req.user._id) {
-      return next(ApiError.forbidden('Вы не можете удалить эту карточку'));
-    }
-
-    await card.remove();
     res.status(200).send(card);
   } catch (err) {
-    if (err.name === 'CastError') {
-      next(ApiError.badRequest('Неверный запрос'));
-    } else {
-      next(ApiError.internal('Ошибка сервера'));
-    }
+    console.log('Error:', err);
+    next(ApiError.internal('Ошибка сервера'));
   }
 };
 
