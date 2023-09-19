@@ -9,43 +9,21 @@ module.exports.login = async (req, res, next) => {
   try {
     const user = await User.findUserByCredentials(email, password);
 
+    if (!user) {
+      return next(ApiError.notFound('Пользователь не найден'));
+    }
+
     const token = jwt.sign(
       { _id: user._id },
       'some-secret-key',
       { expiresIn: '7d' },
     );
 
-    return res.cookie('jwt', { token }, {
-      httpOnly: true,
-      sameSite: true,
-      maxAge: 3600000 * 24 * 7,
-    }).status(200).send({ message: 'Успешный вход' });
+    return res.status(200).send({ token });
   } catch (err) {
     return next(ApiError.internal('Ошибка сервера'));
   }
 };
-
-// module.exports.login = async (req, res, next) => {
-//   const { email, password } = req.body;
-
-//   try {
-//     const user = await User.findUserByCredentials(email, password);
-
-//     if (!user) {
-//       return next(ApiError.notFound('Пользователь не найден'));
-//     }
-
-//     const token = jwt.sign(
-//       { _id: user._id },
-//       'some-secret-key',
-//       { expiresIn: '7d' },
-//     );
-
-//     return res.status(200).send({ token });
-//   } catch (err) {
-//     return next(ApiError.internal('Ошибка сервера'));
-//   }
-// };
 
 module.exports.getUsers = async (req, res, next) => {
   try {
