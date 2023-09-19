@@ -3,36 +3,58 @@ const bcrypt = require('bcrypt');
 const User = require('../models/user');
 const ApiError = require('../errors/ApiError');
 
+// module.exports.login = async (req, res, next) => {
+//   const { email, password } = req.body;
+
+//   // try {
+//   //   const user = await User.findUserByCredentials(email, password);
+
+//   //   const token = jwt.sign(
+//   //     { _id: user._id },
+//   //     'some-secret-key',
+//   //     { expiresIn: '7d' },
+//   //   );
+
+//   //   return res.cookie('jwt', token, {
+//   //     httpOnly: true,
+//   //     sameSite: true,
+//   //     maxAge: 3600000 * 24 * 7,
+//   //   }).status(200).send({ message: 'Успешный вход' });
+//   // } catch (err) {
+//   //   return next(ApiError.internal('Ошибка сервера'));
+//   // }
+//   User.findUserByCredentials(email, password)
+//     .then((user) => {
+//       const token = jwt.sign(
+//         { _id: user._id },
+//         'some-secret-key',
+//         { expiresIn: '7d' },
+//       );
+//       return res.send({ token });
+//     })
+//     .catch(next);
+// };
+
 module.exports.login = async (req, res, next) => {
   const { email, password } = req.body;
 
-  // try {
-  //   const user = await User.findUserByCredentials(email, password);
+  try {
+    const user = await User.findUserByCredentials(email, password);
 
-  //   const token = jwt.sign(
-  //     { _id: user._id },
-  //     'some-secret-key',
-  //     { expiresIn: '7d' },
-  //   );
+    if (!user) {
+      return next(ApiError.notFound('Пользователь не найден'));
+    }
 
-  //   return res.cookie('jwt', token, {
-  //     httpOnly: true,
-  //     sameSite: true,
-  //     maxAge: 3600000 * 24 * 7,
-  //   }).status(200).send({ message: 'Успешный вход' });
-  // } catch (err) {
-  //   return next(ApiError.internal('Ошибка сервера'));
-  // }
-  User.findUserByCredentials(email, password)
-    .then((user) => {
-      const token = jwt.sign(
-        { _id: user._id },
-        'some-secret-key',
-        { expiresIn: '7d' },
-      );
-      return res.send({ token });
-    })
-    .catch(next);
+    const token = jwt.sign(
+      { _id: user._id },
+      'some-secret-key',
+      { expiresIn: '7d' },
+    );
+
+    return res.status(200).send({ token });
+  } catch (err) {
+    return next(ApiError.internal('Ошибка сервера'));
+  }
 };
 
 module.exports.getUsers = async (req, res, next) => {
