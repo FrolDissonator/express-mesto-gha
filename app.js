@@ -7,6 +7,8 @@ const { celebrate, Joi, errors } = require('celebrate');
 const { login, createUser } = require('./controllers/users');
 const auth = require('./middlewares/auth');
 const ApiError = require('./errors/ApiError');
+const errorHandler = require('./middlewares/errorHandler');
+const { urlRegex } = require('./utils/constants');
 
 mongoose.connect('mongodb://127.0.0.1:27017/mestodb', {
   useNewUrlParser: true,
@@ -38,7 +40,7 @@ app.post('/signup', celebrate({
     password: Joi.string().required().min(8),
     name: Joi.string().min(2).max(30),
     about: Joi.string().min(2).max(30),
-    avatar: Joi.string().pattern(/^https?:\/\/(www\.)?[\w\-._~:/?#[\]@!$&'()*+,;=]+#?$/),
+    avatar: Joi.string().pattern(urlRegex),
   }),
 }), createUser);
 
@@ -47,18 +49,12 @@ app.use('/users', require('./routes/users'));
 app.use('/cards', require('./routes/cards'));
 
 app.use('*', (req, res) => {
-  res.status(404).send({ message: 'Страница не существует.' });
+  res.status(ApiError.notFound).send({ message: 'Страница не существует.' });
 });
 
 app.use(errors());
 
-// eslint-disable-next-line no-unused-vars
-app.use((err, req, res, next) => {
-  if (err instanceof ApiError) {
-    return res.status(err.status).send({ message: err.message });
-  }
-  return res.status(ApiError.internal).send({ message: 'Ошибка сервера' });
-});
+app.use(errorHandler);
 
 app.listen(port, () => {
   // eslint-disable-next-line no-console

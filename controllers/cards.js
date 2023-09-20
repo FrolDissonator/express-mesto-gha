@@ -42,7 +42,7 @@ module.exports.deleteCard = async (req, res, next) => {
       return next(ApiError.forbidden('Вы не можете удалить эту карточку'));
     }
 
-    const deletedCard = await Card.findByIdAndRemove(cardId);
+    const deletedCard = await Card.deleteOne(card);
 
     if (!deletedCard) {
       return next(ApiError.notFound('Карточка не найдена'));

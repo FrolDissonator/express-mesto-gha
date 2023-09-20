@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const validator = require('validator');
 const bcrypt = require('bcrypt');
 const ApiError = require('../errors/ApiError');
+const { urlRegex } = require('../utils/constants');
 
 const userSchema = new mongoose.Schema({
   name: {
@@ -20,7 +21,7 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: 'https://pictures.s3.yandex.net/resources/jacques-cousteau_1604399756.png',
     validate: {
-      validator: (v) => /^https?:\/\/(www\.)?[\w\-._~:/?#[\]@!$&'()*+,;=]+#?$/i.test(v),
+      validator: (v) => urlRegex.test(v),
       message: 'Некорректная ссылка',
     },
   },
@@ -36,7 +37,6 @@ const userSchema = new mongoose.Schema({
   password: {
     type: String,
     required: [true, 'Заполните это поле'],
-    minlength: [8, 'Пароль не может быть короче 8 символов'],
     select: false,
   },
 }, { versionKey: false });
